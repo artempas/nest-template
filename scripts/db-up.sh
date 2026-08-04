@@ -118,21 +118,26 @@ port_in_use() {
   return 1
 }
 
-# Кто держит порт — по возможности показываем конкретного виновника.
-port_holder() {
+# Падает с диагностикой, если порт занят кем-то посторонним.
+ensure_port_free() {
   local port="$1" holder=""
+  port_in_use "$port" || return 0
 
+  # Если порт держит docker-контейнер, показываем его имя и как остановить.
   holder="$(docker ps --filter "publish=${port}" --format '{{.Names}} ({{.Image}})' 2>/dev/null | paste -sd', ' -)"
   if [[ -n "$holder" ]]; then
-    echo "docker-контейнер: $holder"
-    return
+    die "порт $port занят docker-контейнером: $holder.
+Остановите его (docker stop <имя>) или поменяйте порт в DATABASE_URL ($ENV_FILE)."
   fi
 
   if command -v lsof >/dev/null 2>&1; then
     holder="$(lsof -nP -iTCP:"$port" -sTCP:LISTEN -F pc 2>/dev/null \
       | awk '/^p/{pid=substr($0,2)} /^c/{print substr($0,2) " (pid " pid ")"}' | sort -u | paste -sd', ' -)"
   fi
-  [[ -n "$holder" ]] && echo "процесс: $holder" || echo "процесс определить не удалось (нужны права root?)"
+  [[ -n "$holder" ]] || holder="определить не удалось (нужны права root?)"
+
+  die "порт $port занят, процесс: $holder.
+Остановите его или поменяйте порт в DATABASE_URL ($ENV_FILE)."
 }
 
 # --- Поднимаем контейнер -------------------------------------------------------------
@@ -143,18 +148,12 @@ if [[ -n "$existing" ]]; then
   if [[ -n "$(docker ps -q --filter "name=^${CONTAINER_NAME}$")" ]]; then
     echo "Контейнер '$CONTAINER_NAME' уже запущен."
   else
-    if port_in_use "$PG_PORT"; then
-      die "порт $PG_PORT занят ($(port_holder "$PG_PORT")).
-Освободите порт или поменяйте порт в DATABASE_URL ($ENV_FILE)."
-    fi
+    ensure_port_free "$PG_PORT"
     echo "Запускаю существующий контейнер '$CONTAINER_NAME'..."
     docker start "$CONTAINER_NAME" >/dev/null
   fi
 else
-  if port_in_use "$PG_PORT"; then
-    die "порт $PG_PORT занят ($(port_holder "$PG_PORT")).
-Освободите порт, поменяйте порт в DATABASE_URL ($ENV_FILE) или задайте другое имя контейнера через CONTAINER_NAME."
-  fi
+  ensure_port_free "$PG_PORT"
   echo "Создаю контейнер '$CONTAINER_NAME' ($PG_IMAGE) на порту $PG_PORT..."
   docker run -d \
     --name "$CONTAINER_NAME" \
