@@ -3,7 +3,18 @@ name: Build
 on:
   push:
     branches: [master]
+    paths: &paths
+      - "src/**"
+      - "test/**"
+      - "prisma/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "tsconfig*.json"
+      - "nest-cli.json"
+      - "eslint.config.mjs"
+      - ".github/workflows/build.yml"
   pull_request:
+    paths: *paths
 
 jobs:
   build:
