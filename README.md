@@ -2,6 +2,11 @@
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
+<p align="center">
+  <a href="https://github.com/artempas/nest-template/actions/workflows/build.yml"><img src="https://github.com/artempas/nest-template/actions/workflows/build.yml/badge.svg" alt="Build"></a>
+  <a href="https://github.com/artempas/nest-template/actions/workflows/lint.yml"><img src="https://github.com/artempas/nest-template/actions/workflows/lint.yml/badge.svg" alt="Lint"></a>
+</p>
+
 <p align="center">Шаблон NestJS-проекта со строгими архитектурными соглашениями (слоистая архитектура, Prisma, типобезопасные контракты) и готовой инфраструктурой для разработки: линтер, тесты, git-хуки, CI.</p>
 
 ## Описание
@@ -81,8 +86,8 @@ pnpm start:prod
 # e2e-тесты
 pnpm test:e2e
 
-# покрытие тестами
-pnpm test:cov
+# e2e-тесты с покрытием
+pnpm test:e2e:cov
 ```
 
 ## Линт и форматирование
