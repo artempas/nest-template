@@ -2,97 +2,141 @@
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+<p align="center">Шаблон NestJS-проекта со строгими архитектурными соглашениями (слоистая архитектура, Prisma, типобезопасные контракты) и готовой инфраструктурой для разработки: линтер, тесты, git-хуки, CI.</p>
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Описание
 
-## Description
+Это не голый `nest new`, а шаблон с закреплёнными в `docs/` правилами: как раскладывать модуль по слоям (контроллер → сервис → репозиторий), как строить HTTP-контракты и DTO, как заводить и обрабатывать ошибки, как называть модели и таблицы в БД и т.д. Перед тем как добавлять код, стоит свериться с [docs/](docs) — это единственный источник правды по архитектуре проекта. Если вы работаете с ассистентом (Claude Code и т.п.), начните с [AGENTS.md](AGENTS.md) — там расписано, какой документ за что отвечает.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Стек
 
-## Project setup
+- [NestJS](https://nestjs.com/) 11 + TypeScript
+- [Prisma ORM](https://www.prisma.io/) 7 (PostgreSQL)
+- [neverthrow](https://github.com/supermacro/neverthrow) — обработка ошибок в стиле Result
+- class-validator / class-transformer — валидация и сериализация DTO
+- Jest + Supertest — e2e-тестирование через реальное HTTP
+- ESLint + Prettier + Husky/lint-staged — статический анализ и pre-commit хуки
+- pnpm — менеджер пакетов
 
-```bash
-$ pnpm install
-```
+## Требования
 
-## Compile and run the project
+- Node.js 22+
+- pnpm (см. поле `packageManager` в [package.json](package.json), сейчас `10.29.3`)
+- Docker (для локального поднятия PostgreSQL скриптом `db-up.sh`; при наличии своей БД — не обязателен)
 
-```bash
-# development
-$ pnpm run start
+## Установка и запуск
 
-# watch mode
-$ pnpm run start:dev
+1. Установить зависимости:
 
-# production mode
-$ pnpm run start:prod
-```
+   ```bash
+   pnpm install
+   ```
 
-## Run tests
+2. Создать `.env` на основе примера и при необходимости поправить `DATABASE_URL`:
 
-```bash
-# unit tests
-$ pnpm run test
+   ```bash
+   cp example.env .env
+   ```
 
-# e2e tests
-$ pnpm run test:e2e
+3. Поднять локальный PostgreSQL в Docker (создаёт контейнер и ждёт готовности БД; если БД уже есть — шаг можно пропустить):
 
-# test coverage
-$ pnpm run test:cov
-```
+   ```bash
+   ./scripts/db-up.sh
+   ```
 
-## Deployment
+4. Сгенерировать Prisma Client и применить миграции:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+   ```bash
+   pnpm exec prisma generate
+   pnpm exec prisma migrate dev
+   ```
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+5. Запустить приложение в режиме разработки (перезапуск при изменении файлов):
+
+   ```bash
+   pnpm start:dev
+   ```
+
+   Приложение поднимется на порту из `PORT` (по умолчанию `3000`).
+
+### Другие режимы запуска
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+# обычный запуск
+pnpm start
+
+# запуск с дебаггером
+pnpm start:debug
+
+# продакшн-сборка и запуск
+pnpm build
+pnpm start:prod
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Тесты
 
-## Resources
+Основной способ тестирования в проекте — e2e (см. [docs/Тестирование.md](docs/Тестирование.md)): тесты поднимают настоящее Nest-приложение и настоящую БД, поэтому перед их запуском нужна работающая PostgreSQL (шаги 2–4 из установки).
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+# e2e-тесты
+pnpm test:e2e
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# покрытие тестами
+pnpm test:cov
+```
 
-## Support
+## Линт и форматирование
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+# проверить и автоматически исправить
+pnpm lint
 
-## Stay in touch
+# только проверить, без исправлений (используется в CI)
+pnpm lint:check
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# форматирование Prettier
+pnpm format
+```
 
-## License
+Husky + lint-staged прогоняют ESLint и Prettier на staged-файлах перед каждым коммитом.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Работа с базой данных
+
+Схема Prisma лежит в [prisma/schema.prisma](prisma/schema.prisma), Prisma Client генерируется в `src/generated/prisma`. Правила именования моделей, полей, таблиц и столбцов описаны в [docs/Модели и БД/](docs/Модели%20и%20БД).
+
+```bash
+# сгенерировать Prisma Client после изменения схемы
+pnpm exec prisma generate
+
+# создать и применить новую миграцию
+pnpm exec prisma migrate dev
+
+# открыть Prisma Studio
+pnpm exec prisma studio
+```
+
+## Структура проекта
+
+```
+src/
+├── main.ts          # точка входа
+├── app.module.ts     # корневой модуль
+├── generated/prisma   # сгенерированный Prisma Client (не редактировать руками)
+└── lib/               # переиспользуемая инфраструктура (алиас @lib)
+prisma/                # схема и миграции Prisma
+test/                  # e2e-тесты
+docs/                  # архитектурные соглашения проекта
+```
+
+Подробное описание структуры модуля — в [docs/Структура модуля.md](docs/Структура%20модуля.md).
+
+## CI
+
+На каждый push/PR в GitHub Actions запускаются два воркфлоу ([.github/workflows](.github/workflows)):
+
+- **Build** — установка зависимостей, генерация Prisma Client, `pnpm build`.
+- **Lint** — установка зависимостей, генерация Prisma Client, `pnpm lint:check`.
+
+## Документация
+
+Все архитектурные соглашения проекта задокументированы в [docs/](docs). Для быстрой навигации по темам (контроллеры, DTO, репозитории, сервисы, гарды, ошибки, модели/БД, тесты и т.д.) см. таблицу в [AGENTS.md](AGENTS.md).
