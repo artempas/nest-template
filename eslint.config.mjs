@@ -41,6 +41,7 @@ export default defineConfig(
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unused-expressions': 'off',
+      '@typescript-eslint/no-redundant-type-constituents': 'off',
       '@typescript-eslint/no-require-imports': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-non-null-asserted-optional-chain': 'warn',

@@ -15,11 +15,9 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "lint:check": "eslint \"{src,apps,libs,test}/**/*.ts\"",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e:cov": "jest --config ./test/jest-e2e.json --coverage",
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "prepare": "husky"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -28,6 +26,8 @@
     "@prisma/client": "^7.9.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "lodash": "^4.18.1",
+    "neverthrow": "^8.2.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -39,6 +39,7 @@
     "@nestjs/testing": "^11.0.1",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
+    "@types/lodash": "^4.17.25",
     "@types/node": "^24.0.0",
     "@types/supertest": "^7.0.0",
     "dotenv": "^17.4.2",
@@ -46,7 +47,9 @@
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^17.0.0",
+    "husky": "^9.1.7",
     "jest": "^30.0.0",
+    "lint-staged": "^17.3.0",
     "prettier": "^3.4.2",
     "prisma": "^7.9.1",
     "source-map-support": "^0.5.21",
@@ -78,5 +81,11 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   }
 }
