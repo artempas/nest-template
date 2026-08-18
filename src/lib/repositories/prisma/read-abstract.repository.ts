@@ -1,25 +1,27 @@
 import { PrismaClient } from '@generated/prisma/client';
 import {
+  BaseFindArgs,
+  BaseFindManyArgs,
   DelegateName,
   FindManyArgs,
   FindUniqueArgs,
   ModelMapper,
+  Paginated,
   PaginationArgs,
   ReadableModelNames,
-  ReadDelegateArgs,
+  ReadRepositoryConfig,
   RepositoryResult,
 } from './types';
 import { Id } from '@lib/types/id';
 import { merge } from 'lodash';
 import { TransactionClient } from '@generated/prisma/internal/prismaNamespace';
 import { PrismaErrorsHandler } from '@lib/decorators/method/prisma-errors-handler/prisma-errors-handler.decorator';
-import { InfrastructureError } from '@lib/errors/infrastructure/infrastructure-error.type';
-import { ok, Result } from 'neverthrow';
+import { ok } from 'neverthrow';
 
 export abstract class PrismaReadRepository<
   M extends ReadableModelNames,
   Entity,
-  A extends ReadDelegateArgs<M> = ReadDelegateArgs<M>,
+  A extends ReadRepositoryConfig<M> = ReadRepositoryConfig<M>,
 > {
   constructor(
     protected readonly prisma: PrismaClient,
@@ -49,38 +51,91 @@ export abstract class PrismaReadRepository<
   }
 
   /**
-   * Возвращает все сущности с учетом пагинации.
+   * Находит сущность по идентификатору. Если сущность не найдена, возвращает
+   * ошибку {@link RecordNotFoundError}.
+   * @param id - идентификатор сущности
+   * @param ctx - контекст транзакции (по умолчанию используется this.prisma)
+   * @returns сущность
+   */
+  @PrismaErrorsHandler()
+  async findUniqueOrFail(
+    id: Id,
+    ctx: TransactionClient = this.prisma,
+  ): RepositoryResult<Entity> {
+    // @ts-expect-error TS unable to resolve delegate signature
+    const model = await this.getDelegate(ctx).findFirstOrThrow(
+      // @ts-expect-error TS unable to resolve delegate signature
+      this.mergeReadUniqueArgs({ where: { id } }),
+    );
+
+    return ok(this.mapper.modelToEntity(model));
+  }
+
+  /**
+   * Возвращает сущности с учётом пагинации, вместе с метаданными пагинации.
    * @param pagination
    * @param ctx
    * @returns
    */
   @PrismaErrorsHandler()
-  async findAll(
+  async findMany(
     pagination: PaginationArgs,
     ctx: TransactionClient = this.prisma,
-  ): Promise<Result<Entity[], InfrastructureError>> {
-    // @ts-expect-error TS unable to resolve delegate signature
-    const models = await this.getDelegate(ctx).findMany(
-      // @ts-expect-error TS unable to resolve delegate signature
-      this.mergeReadManyArgs({
-        take: pagination.limit,
-        skip: pagination.offset ?? 0,
-      }),
-    );
+  ): RepositoryResult<Paginated<Entity>> {
+    const { where } = this.buildBaseArgs();
+    const offset = pagination.offset ?? 0;
 
-    return ok(models.map((model) => this.mapper.manyModelsToEntity(model)));
+    const [models, total] = await Promise.all([
+      // @ts-expect-error TS unable to resolve delegate signature
+      this.getDelegate(ctx).findMany(
+        // @ts-expect-error TS unable to resolve delegate signature
+        this.mergeReadManyArgs({
+          take: pagination.limit,
+          skip: offset,
+        }),
+      ),
+      // @ts-expect-error TS unable to resolve delegate signature
+      this.getDelegate(ctx).count(where ? { where } : {}),
+    ]);
+
+    return ok({
+      items: models.map((model) => this.mapper.modelToEntity(model)),
+      total,
+      limit: pagination.limit,
+      offset,
+    });
+  }
+
+  /**
+   * Базовые аргументы выборки: общий `where` и форма модели (`select`/`include`).
+   */
+  protected buildBaseArgs(): BaseFindArgs<M, A> {
+    const { where, select, include } = this.args;
+
+    return {
+      ...(where ? { where } : {}),
+      ...(select ? { select } : {}),
+      ...(include ? { include } : {}),
+    } as BaseFindArgs<M, A>;
   }
 
   protected mergeReadManyArgs<T extends FindManyArgs<M>>(
     args: T,
-  ): A['forFindAll'] & T {
-    return merge({}, this.args.forFindAll, args);
+  ): BaseFindManyArgs<M, A> & T {
+    const { orderBy } = this.args;
+
+    return merge(
+      {},
+      this.buildBaseArgs(),
+      orderBy ? { orderBy } : {},
+      args,
+    ) as BaseFindManyArgs<M, A> & T;
   }
 
-  protected mergeReadUniqueArgs<T extends FindManyArgs<M>>(
+  protected mergeReadUniqueArgs<T extends FindUniqueArgs<M>>(
     args: T,
-  ): A['forUniqueFind'] & T {
-    return merge({}, this.args.forUniqueFind, args);
+  ): BaseFindArgs<M, A> & T {
+    return merge({}, this.buildBaseArgs(), args);
   }
 
   protected getDelegate(
@@ -103,14 +158,12 @@ class User {
 // #region Types test -----------------------------------------------------------
 
 const args = {
-  forFindAll: {
-    orderBy: { id: 'asc' },
-    select: {
-      id: true,
-    },
+  where: { id: { gt: 0 } },
+  orderBy: { id: 'asc' },
+  select: {
+    id: true,
   },
-  forUniqueFind: {},
-} as const satisfies ReadDelegateArgs<'User'>;
+} as const satisfies ReadRepositoryConfig<'User'>;
 
 class Test extends PrismaReadRepository<'User', User, typeof args> {
   constructor(
