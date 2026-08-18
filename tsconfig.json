@@ -1,29 +1,35 @@
 {
   "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "resolvePackageJsonExports": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2023",
-    "sourceMap": true,
+    "noFallthroughCasesInSwitch": false,
+    "noImplicitAny": false,
     "outDir": "./dist",
     "paths": {
-      "@lib/*": ["./src/lib/*"],
-      "@generated/*": ["./src/generated/*"]
+      "@generated/*": [
+        "./src/generated/*"
+      ],
+      "@lib/*": [
+        "./src/lib/*"
+      ]
     },
-    "incremental": true,
+    "removeComments": true,
+    "resolvePackageJsonExports": true,
     "skipLibCheck": true,
-    "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
+    "sourceMap": true,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false,
-    "types": ["jest", "node"]
+    "strictNullChecks": true,
+    "target": "ES2023",
+    "types": [
+      "jest",
+      "node"
+    ]
   }
 }

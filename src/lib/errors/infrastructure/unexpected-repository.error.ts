@@ -3,7 +3,7 @@ import { NonReturnableInfrastructureError } from './non-returnable-infrastructur
 export class UnexpectedRepositoryError extends NonReturnableInfrastructureError {
   constructor(
     message: string,
-    public cause: Error,
+    public cause?: Error,
   ) {
     super(message, 'UNEXPECTED_REPOSITORY_ERROR');
     this.name = 'UnexpectedRepositoryError';

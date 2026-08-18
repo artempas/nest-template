@@ -4,13 +4,19 @@ import { mapPrismaError } from '@lib/decorators/method/prisma-errors-handler/map
 import { UnexpectedRepositoryError } from '@lib/errors/infrastructure/unexpected-repository.error';
 import { err, Result } from 'neverthrow';
 
-export function PrismaErrorsHandler(): MethodDecorator {
-  return (_target, _propertyKey, descriptor: PropertyDescriptor) => {
-    const original = descriptor.value as (
-      ...args: unknown[]
-    ) => Promise<Result<unknown, InfrastructureError>>;
+type PrismaHandledMethod = (
+  ...args: any[]
+) => Promise<Result<any, InfrastructureError>>;
 
-    descriptor.value = async function (this: unknown, ...args: unknown[]) {
+export function PrismaErrorsHandler() {
+  return function <T extends PrismaHandledMethod>(
+    _target: unknown,
+    _propertyKey: string | symbol,
+    descriptor: TypedPropertyDescriptor<T>,
+  ): TypedPropertyDescriptor<T> {
+    const original = descriptor.value!;
+
+    descriptor.value = async function (this: unknown, ...args: Parameters<T>) {
       try {
         return await original.apply(this, args);
       } catch (e) {
@@ -24,7 +30,7 @@ export function PrismaErrorsHandler(): MethodDecorator {
           ),
         );
       }
-    };
+    } as T;
 
     return descriptor;
   };
