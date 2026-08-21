@@ -21,7 +21,7 @@ export type ReadableModelNames = {
     : never;
 }[ModelName];
 
-export type ViewModelNames = {
+type ViewModelNames = {
   [k in ModelName]: 'create' extends keyof TypeMap['model'][k]['operations']
     ? never
     : k;
@@ -29,7 +29,7 @@ export type ViewModelNames = {
 
 export type WritableModelNames = Exclude<ReadableModelNames, ViewModelNames>;
 
-export type OperationArgs<
+type OperationArgs<
   M extends ReadableModelNames,
   Op extends keyof TypeMap['model'][M]['operations'],
 > = TypeMap['model'][M]['operations'][Op] extends { args: infer A } ? A : never;
@@ -61,25 +61,25 @@ export type DeleteArgs<M extends WritableModelNames> = OperationArgs<
 
 // #region Config building blocks ------------------------------------------------
 
-export type WhereInput<M extends ReadableModelNames> =
+type WhereInput<M extends ReadableModelNames> =
   FindManyArgs<M> extends { where?: infer W } ? NonNullable<W> : never;
 
-export type OrderByInput<M extends ReadableModelNames> =
+type OrderByInput<M extends ReadableModelNames> =
   FindManyArgs<M> extends { orderBy?: infer O } ? NonNullable<O> : never;
 
-export type SelectInput<M extends ReadableModelNames> =
+type SelectInput<M extends ReadableModelNames> =
   FindManyArgs<M> extends { select?: infer S } ? NonNullable<S> : never;
 
-export type IncludeInput<M extends ReadableModelNames> =
+type IncludeInput<M extends ReadableModelNames> =
   FindManyArgs<M> extends { include?: infer I } ? NonNullable<I> : never;
 
-export type UpdateDataInput<M extends WritableModelNames> =
+type UpdateDataInput<M extends WritableModelNames> =
   UpdateArgs<M> extends { data: infer D } ? D : never;
 
 /**
  * `select` и `include` взаимоисключающие, как и в самой Prisma.
  */
-export type SelectionConfig<M extends ReadableModelNames> =
+type SelectionConfig<M extends ReadableModelNames> =
   | { select?: SelectInput<M>; include?: never }
   | { select?: never; include?: IncludeInput<M> };
 
@@ -164,7 +164,7 @@ export type BaseWriteArgs<
 export type DelegateName<M extends ReadableModelNames> =
   M extends `${infer F}${infer R}` ? `${Lowercase<F>}${R}` : never;
 
-export type ReadResult<M extends ReadableModelNames, Args> = Prettify<
+type ReadResult<M extends ReadableModelNames, Args> = Prettify<
   Result<PrismaClient[DelegateName<M>], Args, 'findFirstOrThrow'>
 >;
 
@@ -172,40 +172,28 @@ export type ReadResult<M extends ReadableModelNames, Args> = Prettify<
  * Модель, возвращаемая репозиторием: форма одинакова для всех операций,
  * так как `select`/`include` берутся из общего конфига.
  */
-export type ConfiguredModel<
+type ConfiguredModel<
   M extends ReadableModelNames,
   C extends ReadRepositoryConfig<M>,
 > = ReadResult<M, BaseFindArgs<M, C>>;
 
-export type ModelToEntityMapper<
-  M extends ReadableModelNames,
-  C extends ReadRepositoryConfig<M>,
-  E,
-> = (model: ConfiguredModel<M, C>) => E;
-
-export type EntityToCreateModelMapper<M extends WritableModelNames, E> = (
-  model: Partial<E>,
-) => CreateArgs<M> extends { data: infer D } ? D : never;
-
-export type EntityToUpdateModelMapper<M extends WritableModelNames, E> = (
-  model: Partial<E>,
-) => UpdateDataInput<M>;
-
-export interface ModelMapper<
+export interface IModelMapper<
   M extends ReadableModelNames,
   C extends ReadRepositoryConfig<M>,
   E,
 > {
-  modelToEntity: ModelToEntityMapper<M, C, E>;
+  modelToEntity: (model: ConfiguredModel<M, C>) => E;
 }
 
-export interface WriteModelMapper<
+export interface IWriteModelMapper<
   M extends WritableModelNames,
   C extends ReadRepositoryConfig<M>,
   E,
-> extends ModelMapper<M, C, E> {
-  entityToCreateModel: EntityToCreateModelMapper<M, E>;
-  entityToUpdateModel: EntityToUpdateModelMapper<M, E>;
+> extends IModelMapper<M, C, E> {
+  entityToCreateModel(
+    model: Partial<E>,
+  ): CreateArgs<M> extends { data: infer D } ? D : never;
+  entityToUpdateModel(model: Partial<E>): UpdateDataInput<M>;
 }
 
 export type RepositoryResult<M> = Promise<

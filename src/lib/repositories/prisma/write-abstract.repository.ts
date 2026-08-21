@@ -10,7 +10,7 @@ import type {
   SoftDeleteParams,
   UpdateArgs,
   WritableModelNames,
-  WriteModelMapper,
+  IWriteModelMapper,
   WriteRepositoryConfig,
 } from './types';
 import { PrismaClient } from '@generated/prisma/client';
@@ -28,7 +28,7 @@ export abstract class PrismaWriteRepository<
     prisma: PrismaClient,
     delegateName: DelegateName<M>,
     args: A,
-    protected readonly mapper: WriteModelMapper<M, A, Entity>,
+    protected readonly mapper: IWriteModelMapper<M, A, Entity>,
   ) {
     super(prisma, delegateName, args, mapper);
   }

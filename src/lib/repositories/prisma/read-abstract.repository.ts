@@ -5,7 +5,7 @@ import {
   DelegateName,
   FindManyArgs,
   FindUniqueArgs,
-  ModelMapper,
+  IModelMapper,
   Paginated,
   PaginationArgs,
   ReadableModelNames,
@@ -27,7 +27,7 @@ export abstract class PrismaReadRepository<
     protected readonly prisma: PrismaClient,
     protected readonly delegateName: DelegateName<M>,
     protected readonly args: A,
-    protected readonly mapper: ModelMapper<M, A, Entity>,
+    protected readonly mapper: IModelMapper<M, A, Entity>,
   ) {}
 
   /**
@@ -170,7 +170,7 @@ class Test extends PrismaReadRepository<'User', User, typeof args> {
     prisma: PrismaClient,
     delegateName: DelegateName<'User'>,
     arg: typeof args,
-    mapper: ModelMapper<'User', typeof args, User>,
+    mapper: IModelMapper<'User', typeof args, User>,
   ) {
     super(prisma, delegateName, arg, mapper);
   }
