@@ -1,4 +1,5 @@
-export { HttpReturnableError } from './base.error';
+export { HttpReturnableError } from './http.error';
+export * from './domain';
 export type { ERROR_CODES } from './error-codes';
 export {
   InfrastructureErrorCodes,

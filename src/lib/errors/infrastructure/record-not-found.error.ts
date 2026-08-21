@@ -1,5 +1,5 @@
 import { PrismaClientKnownRequestError } from '@generated/prisma/internal/prismaNamespace';
-import { HttpReturnableError } from '../base.error';
+import { HttpReturnableError } from '../http.error';
 
 export class RecordNotFoundError extends HttpReturnableError {
   constructor(
