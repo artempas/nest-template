@@ -18,7 +18,33 @@ model User {
   fullname String
 }
 
-model SomeOtherModel {
-  id Int @id
-  label String?
+model Structure {
+  id        Int     @id @default(autoincrement())
+  name      String  @unique
+  shortName String  @unique @map("short_name")
+
+  createdAt   DateTime  @map("created_at") @db.Timestamptz() @default(now())
+  createdById Int       @map("created_by_id")
+  updatedAt   DateTime? @map("updated_at") @db.Timestamptz()
+  updatedById Int?      @map("updated_by_id")
+
+  substructures Substructure[]
+
+  @@map("structures")
+}
+
+model Substructure {
+  id          Int    @id @default(autoincrement())
+  structureId Int    @map("structure_id")
+  name        String
+
+  createdAt   DateTime  @map("created_at") @default(now()) @db.Timestamptz()
+  createdById Int       @map("created_by_id")
+  updatedAt   DateTime? @map("updated_at") @db.Timestamptz()
+  updatedById Int?      @map("updated_by_id")
+
+  structure Structure @relation(fields: [structureId], references: [id], onUpdate: Cascade, onDelete: Restrict)
+
+  @@unique([structureId, name])
+  @@map("substructures")
 }
