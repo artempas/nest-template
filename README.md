@@ -116,9 +116,6 @@ pnpm exec prisma generate
 
 # создать и применить новую миграцию
 pnpm exec prisma migrate dev
-
-# открыть Prisma Studio
-pnpm exec prisma studio
 ```
 
 ## Структура проекта
