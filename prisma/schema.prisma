@@ -6,6 +6,7 @@
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -36,7 +37,7 @@ model Structure {
 model Substructure {
   id          Int    @id @default(autoincrement())
   structureId Int    @map("structure_id")
-  name        String
+  name        String @unique()
 
   createdAt   DateTime  @map("created_at") @default(now()) @db.Timestamptz()
   createdById Int       @map("created_by_id")
@@ -45,6 +46,5 @@ model Substructure {
 
   structure Structure @relation(fields: [structureId], references: [id], onUpdate: Cascade, onDelete: Restrict)
 
-  @@unique([structureId, name])
   @@map("substructures")
 }
