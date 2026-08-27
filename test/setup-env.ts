@@ -13,3 +13,7 @@ import { getTestDatabaseUrl } from './database-url';
 if (process.env.DATABASE_URL) {
   process.env.DATABASE_URL = getTestDatabaseUrl();
 }
+
+// По умолчанию тесты не шумят логами приложения. Для отладки конкретного
+// прогона — LOG_LEVEL=debug pnpm test:e2e.
+process.env.LOG_LEVEL ??= 'silent';

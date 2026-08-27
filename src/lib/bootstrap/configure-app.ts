@@ -3,6 +3,7 @@ import {
   INestApplication,
   ValidationPipe,
 } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 import { Reflector } from '@nestjs/core';
 
 /**
@@ -14,6 +15,11 @@ import { Reflector } from '@nestjs/core';
  * между продом и тестами, добавляется сюда, а не в `main.ts`.
  */
 export function configureApp(app: INestApplication): INestApplication {
+  // Логгер приложения — pino (см. docs/Логирование.md). Ставится здесь,
+  // а не в `main.ts`, чтобы тестовое приложение писало логи тем же путём.
+  app.useLogger(app.get(Logger));
+  app.flushLogs();
+
   app.useGlobalPipes(
     new ValidationPipe({
       // Отбрасывать поля без декораторов — защита от mass assignment

@@ -18,6 +18,7 @@
 - [NestJS](https://nestjs.com/) 11 + TypeScript
 - [Prisma ORM](https://www.prisma.io/) 7 (PostgreSQL)
 - [neverthrow](https://github.com/supermacro/neverthrow) — обработка ошибок в стиле Result
+- [nestjs-pino](https://github.com/iamolegga/nestjs-pino) — структурированное логирование (см. [docs/Логирование.md](docs/Логирование.md))
 - class-validator / class-transformer — валидация и сериализация DTO
 - Jest + Supertest — e2e-тестирование через реальное HTTP
 - ESLint + Prettier + Husky/lint-staged — статический анализ и pre-commit хуки

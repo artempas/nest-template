@@ -1,1 +1,1 @@
-export { actorHeaders } from './auth.helper';
+export { authHeaders } from './auth.helper';

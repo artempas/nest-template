@@ -1,4 +1,5 @@
 import type { Id } from '@lib/types/id';
+import { AUTH_HEADERS } from '@lib/dtos';
 
 /**
  * Заголовки запроса от имени пользователя — те же, которые в контроллере
@@ -7,13 +8,13 @@ import type { Id } from '@lib/types/id';
  * ````typescript
  * await request(app.getHttpServer())
  *   .get(PostsController.paths.findOne.getWithParams({ postId }))
- *   .set(actorHeaders(author.id))
+ *   .set(authHeaders(author.id))
  *   .expect(200);
  * ````
  *
  * Имя заголовка не пишется в тестах строкой: переименование поедет из
  * {@link AUTH_HEADERS} само.
  */
-export function actorHeaders(userId: Id): Record<string, string> {
-  return { user_id: String(userId) };
+export function authHeaders(userId: Id): Record<string, string> {
+  return { [AUTH_HEADERS.userId]: String(userId) };
 }

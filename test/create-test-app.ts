@@ -1,6 +1,7 @@
 import { INestApplication, ModuleMetadata, Provider } from '@nestjs/common';
 import { Test, TestingModuleBuilder } from '@nestjs/testing';
 import { configureApp } from '@lib/bootstrap';
+import { LoggerModule } from '@lib/logger';
 
 /**
  * Собирает тестовое приложение с той же обвязкой, что и прод
@@ -11,13 +12,20 @@ import { configureApp } from '@lib/bootstrap';
 export async function createTestApp(
   metadata: ModuleMetadata,
 ): Promise<INestApplication> {
-  const builder = Test.createTestingModule({ imports: metadata.imports });
+  // LoggerModule (@Global) обязан совпадать с прод-обвязкой: configureApp
+  // вызывает app.get(Logger). Уровень в тестах глушится через LOG_LEVEL
+  // (см. test/setup-env.ts).
+  const builder = Test.createTestingModule({
+    imports: [LoggerModule, ...(metadata.imports ?? [])],
+  });
 
   for (const provider of metadata.providers ?? []) {
     overrideProvider(builder, provider);
   }
 
-  const app = (await builder.compile()).createNestApplication();
+  const app = (await builder.compile()).createNestApplication({
+    bufferLogs: true,
+  });
 
   // Глобальные пайпы и сериализация обязаны совпадать с main.ts, иначе e2e
   // перестаёт проверять реальное поведение.

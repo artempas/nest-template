@@ -6,7 +6,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { buildSwaggerDocument } from '@lib/bootstrap';
-import { actorHeaders } from './helpers';
+import { authHeaders } from './helpers';
 import { AuthHeaders } from '@lib/decorators/param/auth-headers.decorator';
 import { AuthHeadersDto } from '@lib/dtos';
 import { createTestApp } from './create-test-app';
@@ -87,17 +87,17 @@ describe('Глобальная обвязка приложения', () => {
   it('разбирает тело и заголовки актора, отдаёт только @Expose-поля', async () => {
     const response = await request(app.getHttpServer())
       .post(echoPath)
-      .set(actorHeaders(42))
+      .set(authHeaders(42))
       .send({ title: '  Заголовок  ' })
       .expect(201);
 
-    expect(response.body).toEqual({ actorId: 42, title: 'Заголовок' });
+    expect(response.body).toEqual({ userId: 42, title: 'Заголовок' });
   });
 
   it('отвечает 400 на лишнее поле в теле', async () => {
     await request(app.getHttpServer())
       .post(echoPath)
-      .set(actorHeaders(42))
+      .set(authHeaders(42))
       .send({ title: 'Заголовок', isAdmin: true })
       .expect(400);
   });
@@ -112,7 +112,7 @@ describe('Глобальная обвязка приложения', () => {
   it('отвечает 400, если актор не натуральное число', async () => {
     await request(app.getHttpServer())
       .post(echoPath)
-      .set(actorHeaders(0))
+      .set(authHeaders(0))
       .send({ title: 'Заголовок' })
       .expect(400);
   });

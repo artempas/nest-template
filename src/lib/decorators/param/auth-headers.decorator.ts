@@ -1,4 +1,4 @@
-import { AuthHeadersDto } from '@lib/dtos';
+import { AUTH_HEADERS } from '@lib/dtos';
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import type { Request } from 'express';
 import { pick } from 'lodash';
@@ -20,6 +20,6 @@ export const AuthHeaders = createParamDecorator(
   (_: unknown, ctx: ExecutionContext): Record<string, unknown> =>
     pick(
       ctx.switchToHttp().getRequest<Request>().headers,
-      Object.values(AuthHeadersDto.prototype),
+      Object.values(AUTH_HEADERS),
     ),
 );
