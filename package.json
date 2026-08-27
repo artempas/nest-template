@@ -23,6 +23,8 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.4.7",
+    "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
@@ -70,8 +72,11 @@
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
     "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1",
       "^@lib/(.*)$": "<rootDir>/lib/$1",
-      "^@lib$": "<rootDir>/lib"
+      "^@lib$": "<rootDir>/lib",
+      "^@modules/(.*)$": "<rootDir>/modules/$1",
+      "^@generated/(.*)$": "<rootDir>/generated/$1"
     },
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"

@@ -1,6 +1,6 @@
 export { HttpReturnableError } from './http.error';
 export * from './domain';
-export type { ERROR_CODES } from './error-codes';
+export type { ErrorCodes } from './error-codes';
 export {
   InfrastructureErrorCodes,
   ForeignKeyConstraintError,

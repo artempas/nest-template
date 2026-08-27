@@ -18,6 +18,9 @@
       ],
       "@lib/*": [
         "./src/lib/*"
+      ],
+      "@modules/*": [
+        "./src/modules/*"
       ]
     },
     "removeComments": true,
@@ -26,6 +29,7 @@
     "sourceMap": true,
     "strictBindCallApply": false,
     "strictNullChecks": true,
+    "strictPropertyInitialization": false,
     "target": "ES2023",
     "types": [
       "jest",

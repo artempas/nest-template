@@ -203,6 +203,10 @@ export default defineConfig(
     // хранения. В сервисах, DTO и контрактах его быть не должно, конвертация
     // приложение ↔ Prisma живёт в репозитории.
     files: ['**/*.service.ts', '**/*.dto.ts', '**/*.contract.ts'],
+    // Правило про слой бизнес-логики. src/lib — инфраструктура: репозитории и
+    // PrismaService работают со сгенерированным клиентом по определению,
+    // конвертация «приложение ↔ Prisma» живёт именно здесь.
+    ignores: ['src/lib/prisma/**'],
     rules: {
       '@typescript-eslint/no-restricted-imports': [
         'error',

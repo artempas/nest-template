@@ -10,7 +10,9 @@ import { applyDecorators } from '@nestjs/common';
 import { Transform } from 'class-transformer';
 import type { MaxStringLength } from '@lib/constants/validation';
 
-export function IsNaturalNumber(validationOptions?: ValidationOptions) {
+export function IsNaturalNumber(
+  validationOptions?: ValidationOptions,
+): PropertyDecorator {
   return applyDecorators(IsInt(validationOptions), Min(1, validationOptions));
 }
 
@@ -33,7 +35,7 @@ type IsValidStringOptions = {
 export function IsValidString(
   options: IsValidStringOptions,
   validationOptions?: ValidationOptions,
-) {
+): PropertyDecorator {
   const minLength = options.minLength ?? 1;
   const decorators: PropertyDecorator[] = [
     IsString(validationOptions),

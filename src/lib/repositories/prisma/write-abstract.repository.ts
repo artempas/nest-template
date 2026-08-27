@@ -6,11 +6,11 @@ import type {
   DelegateName,
   DeleteArgs,
   HardDeleteParams,
+  IWriteModelMapper,
   RepositoryResult,
   SoftDeleteParams,
   UpdateArgs,
   WritableModelNames,
-  IWriteModelMapper,
   WriteRepositoryConfig,
 } from './types';
 import { PrismaClient } from '@generated/prisma/client';

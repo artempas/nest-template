@@ -1,4 +1,4 @@
-import { ERROR_CODES } from './error-codes';
+import { ErrorCodes } from './error-codes';
 
 export class HttpReturnableError extends Error {
   cause?: Error;
@@ -8,7 +8,7 @@ export class HttpReturnableError extends Error {
   constructor(
     public publicMessage: string,
     public statusCode: number,
-    public errorCode: ERROR_CODES,
+    public errorCode: ErrorCodes,
     args?: {
       cause?: Error;
       internalMessage?: string;
@@ -21,7 +21,7 @@ export class HttpReturnableError extends Error {
     this.additionalResponseData = args?.additionalResponseData;
   }
 
-  toResponse() {
+  toResponse(): Record<string, any> & { message: string; code: ErrorCodes } {
     return {
       ...(this.additionalResponseData ?? {}),
       message: this.publicMessage,
