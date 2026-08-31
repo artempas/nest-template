@@ -4,7 +4,8 @@
       "Bash(npx eslint *)",
       "Bash(pnpm build *)",
       "Bash(pnpm lint:check)",
-      "Bash(pnpm test:e2e)"
+      "Bash(pnpm test:e2e)",
+      "Bash(npx tsc *)"
     ]
   }
 }

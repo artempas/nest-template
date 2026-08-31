@@ -207,19 +207,26 @@ declare class SoftOnlyRepo extends PrismaWriteRepository<
 declare const hardDeletable: HardDeletableRepo;
 declare const softOnly: SoftOnlyRepo;
 
-void hardDeletable.updateUnique(
-  1,
-  {
-    fullname: '',
-  },
-  1,
-);
-void hardDeletable.delete(1);
-// @ts-expect-error softDelete недоступен без softDeleteData в конфиге
-void hardDeletable.softDelete(1, 1);
+// Проверки только на уровне типов. Обёрнуты в неиспользуемую функцию, чтобы
+// `declare const` выше не превращались в обращения к несуществующим рантайм-
+// биндингам при импорте модуля (например, из ts-jest).
+function assertWriteRepositoryTypes(): void {
+  void hardDeletable.updateUnique(
+    1,
+    {
+      fullname: '',
+    },
+    1,
+  );
+  void hardDeletable.delete(1);
+  // @ts-expect-error softDelete недоступен без softDeleteData в конфиге
+  void hardDeletable.softDelete(1, 1);
 
-void softOnly.softDelete(1, 1);
-// @ts-expect-error delete недоступен при enableHardDelete: false
-void softOnly.delete(1);
+  void softOnly.softDelete(1, 1);
+  // @ts-expect-error delete недоступен при enableHardDelete: false
+  void softOnly.delete(1);
+}
+
+void assertWriteRepositoryTypes;
 
 // #endregion TEST

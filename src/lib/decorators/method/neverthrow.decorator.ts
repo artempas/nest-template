@@ -1,34 +1,50 @@
-import { HttpReturnableDomainError, UnhandledDomainError } from '@lib/errors';
-import { DomainError } from '@lib/errors/domain/base.error';
+import {
+  DomainError,
+  HttpReturnableDomainError,
+} from '@lib/errors/domain/base.error';
 import { err, Result } from 'neverthrow';
+import { UnhandledDomainError } from '@lib/errors';
 
 export type ServiceResult<
   R,
-  E extends HttpReturnableDomainError | DomainError,
+  E extends DomainError | HttpReturnableDomainError,
 > = Result<R, E | UnhandledDomainError>;
 
-export function NeverThrow(
-  originalMethod: (...args: any[]) => Promise<ServiceResult<any, any>>,
-  context: ClassMethodDecoratorContext,
-) {
-  const methodName = String(context.name);
+type ServiceMethod = (...args: any[]) => Promise<ServiceResult<any, any>>;
 
-  return async function (this: any, ...args: any[]) {
-    try {
-      const res = originalMethod.apply(this, args);
-      if (res instanceof Promise) {
-        return await res;
+/**
+ * Оборачивает тело в `try/catch` и
+ * превращает всё, что вылетело мимо явного `err(...)`, в `err`:
+ *
+ * - доменная ошибка (`DomainError` / `HttpReturnableDomainError`) —
+ *   пробрасывается как есть;
+ * - остальное заворачивается в {@link UnhandledDomainError}.
+ */
+export function NeverThrow() {
+  return function <T extends ServiceMethod>(
+    _target: unknown,
+    _propertyKey: string | symbol,
+    descriptor: TypedPropertyDescriptor<T>,
+  ): TypedPropertyDescriptor<T> {
+    const original = descriptor.value!;
+
+    descriptor.value = async function (this: unknown, ...args: Parameters<T>) {
+      try {
+        return await original.apply(this, args);
+      } catch (e) {
+        if (
+          e instanceof DomainError ||
+          e instanceof HttpReturnableDomainError
+        ) {
+          return err(e);
+        }
+        if (e instanceof Error) {
+          return err(new UnhandledDomainError(e.message, e));
+        }
+        return err(new UnhandledDomainError(String(e), new Error(String(e))));
       }
-      return res;
-    } catch (e: any) {
-      if (e instanceof DomainError || e instanceof HttpReturnableDomainError) {
-        return err(e);
-      }
-      if (e instanceof Error)
-        return err(new UnhandledDomainError(e.message, e));
-      return err(
-        new UnhandledDomainError(e.toString(), new Error(e.toString())),
-      );
-    }
+    } as T;
+
+    return descriptor;
   };
 }

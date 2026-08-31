@@ -49,6 +49,9 @@ export type CreateArgs<M extends WritableModelNames> = OperationArgs<
   'create'
 >;
 
+export type CreateData<M extends WritableModelNames> =
+  CreateArgs<M> extends { data: infer D } ? D : never;
+
 export type UpdateArgs<M extends WritableModelNames> = OperationArgs<
   M,
   'update'
@@ -73,7 +76,7 @@ type SelectInput<M extends ReadableModelNames> =
 type IncludeInput<M extends ReadableModelNames> =
   FindManyArgs<M> extends { include?: infer I } ? NonNullable<I> : never;
 
-type UpdateDataInput<M extends WritableModelNames> =
+export type UpdateDataInput<M extends WritableModelNames> =
   UpdateArgs<M> extends { data: infer D } ? D : never;
 
 /**
@@ -172,7 +175,7 @@ type ReadResult<M extends ReadableModelNames, Args> = Prettify<
  * Модель, возвращаемая репозиторием: форма одинакова для всех операций,
  * так как `select`/`include` берутся из общего конфига.
  */
-type ConfiguredModel<
+export type ConfiguredModel<
   M extends ReadableModelNames,
   C extends ReadRepositoryConfig<M>,
 > = ReadResult<M, BaseFindArgs<M, C>>;
@@ -190,9 +193,7 @@ export interface IWriteModelMapper<
   C extends ReadRepositoryConfig<M>,
   E,
 > extends IModelMapper<M, C, E> {
-  entityToCreateModel(
-    model: Partial<E>,
-  ): CreateArgs<M> extends { data: infer D } ? D : never;
+  entityToCreateModel(model: Partial<E>): CreateData<M>;
   entityToUpdateModel(model: Partial<E>): UpdateDataInput<M>;
 }
 

@@ -3,6 +3,7 @@ import {
   INestApplication,
   ValidationPipe,
 } from '@nestjs/common';
+import { DomainExceptionFilter } from '@lib/errors';
 import { Logger } from 'nestjs-pino';
 import { Reflector } from '@nestjs/core';
 
@@ -43,6 +44,10 @@ export function configureApp(app: INestApplication): INestApplication {
       strategy: 'excludeAll',
     }),
   );
+
+  // Ошибки проекта (доменные/инфраструктурные) в единый конверт `{ error }`
+  // (см. docs/Обработка ошибок.md > Глобальный ExceptionFilter).
+  app.useGlobalFilters(new DomainExceptionFilter());
 
   return app;
 }

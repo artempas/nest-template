@@ -3,10 +3,6 @@ import { IsNaturalNumber } from '@lib/decorators/property/validation';
 
 /**
  * Соответствие «поле {@link AuthHeadersDto} → имя HTTP-заголовка».
- *
- * Единственный источник правды по именам заголовков актора: по нему
- * `@AuthHeaders()` выбирает нужные заголовки из запроса, а тесты формируют
- * их через хелпер `authHeaders()` — имя заголовка строкой нигде не дублируется.
  */
 export const AUTH_HEADERS = {
   userId: 'user_id',

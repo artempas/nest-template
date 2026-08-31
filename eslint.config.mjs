@@ -234,6 +234,9 @@ export default defineConfig(
     rules: {
       // Фикстуры и моки тестов на возвращаемые типы не проверяем.
       '@typescript-eslint/explicit-function-return-type': 'off',
+      // Тестам можно ходить в потроха модулей (репозитории, entities) в обход
+      // barrel: фикстуре нужен доступ к тому, что модуль наружу не отдаёт.
+      '@typescript-eslint/no-restricted-imports': 'off',
     },
   },
 );

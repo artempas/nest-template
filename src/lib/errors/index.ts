@@ -1,4 +1,5 @@
 export { HttpReturnableError } from './http.error';
+export { DomainExceptionFilter } from './domain-exception.filter';
 export * from './domain';
 export type { ErrorCodes } from './error-codes';
 export {
