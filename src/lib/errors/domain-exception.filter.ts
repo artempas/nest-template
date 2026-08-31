@@ -3,11 +3,11 @@ import {
   Catch,
   ExceptionFilter,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
 import { DomainError, UnhandledDomainError } from './domain';
 import type { Response } from 'express';
 import { HttpReturnableError } from './http.error';
+import { Logger } from 'nestjs-pino';
 
 /**
  * Глобальный фильтр для ошибок проекта (см. docs/Обработка ошибок.md >
@@ -21,7 +21,7 @@ import { HttpReturnableError } from './http.error';
  */
 @Catch(HttpReturnableError, DomainError)
 export class DomainExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(DomainExceptionFilter.name);
+  constructor(private readonly logger: Logger) {}
 
   catch(
     exception: DomainError | HttpReturnableError,
@@ -31,7 +31,10 @@ export class DomainExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof HttpReturnableError) {
       if (exception.statusCode >= 500) {
-        this.logger.error(exception.message, exception.cause?.stack);
+        this.logger.error(
+          exception.cause ?? exception,
+          DomainExceptionFilter.name,
+        );
       }
 
       response
@@ -41,10 +44,8 @@ export class DomainExceptionFilter implements ExceptionFilter {
     }
 
     this.logger.error(
-      exception.message,
-      exception instanceof UnhandledDomainError
-        ? exception.cause.stack
-        : exception.stack,
+      exception instanceof UnhandledDomainError ? exception.cause : exception,
+      DomainExceptionFilter.name,
     );
 
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({

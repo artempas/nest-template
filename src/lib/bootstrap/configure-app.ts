@@ -46,8 +46,9 @@ export function configureApp(app: INestApplication): INestApplication {
   );
 
   // Ошибки проекта (доменные/инфраструктурные) в единый конверт `{ error }`
-  // (см. docs/Обработка ошибок.md > Глобальный ExceptionFilter).
-  app.useGlobalFilters(new DomainExceptionFilter());
+  // (см. docs/Обработка ошибок.md > Глобальный ExceptionFilter). Фильтр вне DI,
+  // поэтому pino-логгер отдаётся ему конструктором — как Reflector выше.
+  app.useGlobalFilters(new DomainExceptionFilter(app.get(Logger)));
 
   return app;
 }
