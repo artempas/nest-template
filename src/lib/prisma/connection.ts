@@ -13,6 +13,11 @@ export function parseConnectionString(url: string): PrismaConnection {
   return { connectionString: parsed.toString(), schema };
 }
 
+/**
+ * Читает подключение из `process.env` напрямую — для кода вне Nest-контейнера
+ * (`prisma/seed.ts`, тестовые фикстуры). В приложении строка подключения
+ * приходит из `AppConfigService` (см. `prisma.service.ts`).
+ */
 export function readConnectionFromEnv(): PrismaConnection {
   const url = process.env.DATABASE_URL;
 

@@ -1,9 +1,13 @@
-import { buildLoggerParams } from './logger.config';
+import { AppConfigService, ConfigModule } from '@lib/config';
 import { Global, Module } from '@nestjs/common';
-import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
+import {
+  Params,
+  LoggerModule as PinoLoggerModule,
+} from '@cct-rip/nestjs-pino-logger';
+import { buildLoggerParams } from './logger.config';
 
 /**
- * Обёртка над `nestjs-pino`: структурированный лог приложения и
+ * Обёртка над `@cct-rip/nestjs-pino-logger`: структурированный лог приложения и
  * автоматический лог каждого HTTP-запроса (см. docs/Логирование.md).
  *
  * Помечен `@Global()` по аналогии с `PrismaModule` — `PinoLogger` и `Logger`
@@ -11,7 +15,14 @@ import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
  */
 @Global()
 @Module({
-  imports: [PinoLoggerModule.forRoot(buildLoggerParams())],
+  imports: [
+    PinoLoggerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [AppConfigService],
+      useFactory: (config: AppConfigService): Params =>
+        buildLoggerParams(config),
+    }),
+  ],
   exports: [PinoLoggerModule],
 })
 export class LoggerModule {}

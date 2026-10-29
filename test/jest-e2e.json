@@ -12,6 +12,11 @@
     "^@modules/(.*)$": "<rootDir>/src/modules/$1"
   },
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
-  }
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      { "diagnostics": { "ignoreCodes": [151002, 2307] } }
+    ]
+  },
+  "maxWorkers": 5,
+  "workerIdleMemoryLimit": "512MB"
 }

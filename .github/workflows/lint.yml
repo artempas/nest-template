@@ -12,6 +12,7 @@ on:
       - "tsconfig*.json"
       - "nest-cli.json"
       - "eslint.config.mjs"
+      - ".prettierrc"
       - ".github/workflows/lint.yml"
   pull_request:
     paths: *paths
@@ -38,3 +39,6 @@ jobs:
 
       - name: Run ESLint
         run: pnpm lint:check
+
+      - name: Run Prettier
+        run: pnpm format:check

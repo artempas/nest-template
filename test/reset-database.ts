@@ -2,7 +2,9 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { getTestSchema } from './database-url';
 import { join } from 'node:path';
-import { PrismaService } from '@lib/prisma';
+import { PrismaClient } from '@generated/prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { readConnectionFromEnv } from '@lib/prisma';
 import { seedReferenceData } from './seed-reference-data';
 
 const MIGRATIONS_PATH = join(__dirname, '..', 'prisma', 'migrations');
@@ -32,7 +34,7 @@ function getSafeSchemaName(): string {
 /**
  * Создаёт схему воркера и накатывает на неё миграции.
  */
-function prepareSchema(prisma: PrismaService, schema: string): Promise<void> {
+function prepareSchema(prisma: PrismaClient, schema: string): Promise<void> {
   return prisma
     .$executeRawUnsafe(`CREATE SCHEMA IF NOT EXISTS "${schema}"`)
     .then(() => {
@@ -57,7 +59,12 @@ function prepareSchema(prisma: PrismaService, schema: string): Promise<void> {
  */
 export async function resetDatabase(): Promise<void> {
   const schema = getSafeSchemaName();
-  const prisma = new PrismaService();
+  // Вне Nest-контейнера: PrismaService берёт подключение из AppConfigService,
+  // которого здесь нет, поэтому клиент собирается из окружения напрямую.
+  const { connectionString } = readConnectionFromEnv();
+  const prisma = new PrismaClient({
+    adapter: new PrismaPg(connectionString, { schema }),
+  });
 
   try {
     if (!schemaPrepared) {

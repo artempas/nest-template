@@ -6,11 +6,13 @@ import {
   FindManyArgs,
   FindUniqueArgs,
   IModelMapper,
+  IncludeInput,
   Paginated,
   PaginationArgs,
   ReadableModelNames,
   ReadRepositoryConfig,
   RepositoryResult,
+  UntypedDelegate,
 } from './types';
 import { Id } from '@lib/types/id';
 import { merge } from 'lodash';
@@ -41,8 +43,7 @@ export abstract class PrismaReadRepository<
     id: Id,
     ctx: TransactionClient = this.prisma,
   ): RepositoryResult<Entity | null> {
-    // @ts-expect-error TS unable to resolve delegate signature
-    const model = await this.getDelegate(ctx).findFirst(
+    const model = await this.getUntypedDelegate(ctx).findFirst(
       // @ts-expect-error TS unable to resolve delegate signature
       this.mergeReadUniqueArgs({ where: { id } }),
     );
@@ -62,8 +63,7 @@ export abstract class PrismaReadRepository<
     id: Id,
     ctx: TransactionClient = this.prisma,
   ): RepositoryResult<Entity> {
-    // @ts-expect-error TS unable to resolve delegate signature
-    const model = await this.getDelegate(ctx).findFirstOrThrow(
+    const model = await this.getUntypedDelegate(ctx).findFirstOrThrow(
       // @ts-expect-error TS unable to resolve delegate signature
       this.mergeReadUniqueArgs({ where: { id } }),
     );
@@ -86,16 +86,14 @@ export abstract class PrismaReadRepository<
     const offset = pagination.offset ?? 0;
 
     const [models, total] = await Promise.all([
-      // @ts-expect-error TS unable to resolve delegate signature
-      this.getDelegate(ctx).findMany(
+      this.getUntypedDelegate(ctx).findMany(
         // @ts-expect-error TS unable to resolve delegate signature
         this.mergeReadManyArgs({
           take: pagination.limit,
           skip: offset,
         }),
       ),
-      // @ts-expect-error TS unable to resolve delegate signature
-      this.getDelegate(ctx).count(where ? { where } : {}),
+      this.getUntypedDelegate(ctx).count(where ? { where } : {}),
     ]);
 
     return ok({
@@ -110,7 +108,8 @@ export abstract class PrismaReadRepository<
    * Базовые аргументы выборки: общий `where` и форма модели (`select`/`include`).
    */
   protected buildBaseArgs(): BaseFindArgs<M, A> {
-    const { where, select, include } = this.args;
+    const { where, select } = this.args;
+    const include = this.resolveInclude();
 
     return {
       ...(where ? { where } : {}),
@@ -123,11 +122,17 @@ export abstract class PrismaReadRepository<
     args: T,
   ): BaseFindManyArgs<M, A> & T {
     const { orderBy } = this.args;
+    // orderBy из аргументов замещает указанный в конфиге, а не сливается с ним:
+    // merge склеил бы сортировки по разным полям в одну
+    const configOrderBy =
+      orderBy && (args as { orderBy?: unknown }).orderBy === undefined
+        ? { orderBy }
+        : {};
 
     return merge(
       {},
       this.buildBaseArgs(),
-      orderBy ? { orderBy } : {},
+      configOrderBy,
       args,
     ) as BaseFindManyArgs<M, A> & T;
   }
@@ -138,10 +143,23 @@ export abstract class PrismaReadRepository<
     return merge({}, this.buildBaseArgs(), args);
   }
 
+  protected resolveInclude(): IncludeInput<M> | undefined {
+    const { include } = this.args;
+
+    return typeof include === 'function'
+      ? (include as () => IncludeInput<M>)()
+      : include;
+  }
+
   protected getDelegate(
     ctx: TransactionClient,
   ): TransactionClient[DelegateName<M>] {
     return ctx[this.delegateName];
+  }
+
+  protected getUntypedDelegate(ctx: TransactionClient): UntypedDelegate {
+    const delegate: unknown = ctx[this.delegateName];
+    return delegate as UntypedDelegate;
   }
 }
 
@@ -156,6 +174,7 @@ class User {
 }
 
 // #region Types test -----------------------------------------------------------
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 const args = {
   where: { id: { gt: 0 } },

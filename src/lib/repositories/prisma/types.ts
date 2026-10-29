@@ -49,6 +49,9 @@ export type CreateArgs<M extends WritableModelNames> = OperationArgs<
   'create'
 >;
 
+export type CreateManyAndReturnArgs<M extends WritableModelNames> =
+  OperationArgs<M, 'createManyAndReturn'>;
+
 export type CreateData<M extends WritableModelNames> =
   CreateArgs<M> extends { data: infer D } ? D : never;
 
@@ -73,8 +76,24 @@ type OrderByInput<M extends ReadableModelNames> =
 type SelectInput<M extends ReadableModelNames> =
   FindManyArgs<M> extends { select?: infer S } ? NonNullable<S> : never;
 
-type IncludeInput<M extends ReadableModelNames> =
+export type IncludeInput<M extends ReadableModelNames> =
   FindManyArgs<M> extends { include?: infer I } ? NonNullable<I> : never;
+
+/**
+ * `include` в конфиге может задаваться как значением, так и фабрикой —
+ * ленивое вычисление нужно для циклических ссылок между репозиториями.
+ */
+export type IncludeConfig<M extends ReadableModelNames> =
+  IncludeInput<M> | (() => IncludeInput<M>);
+
+/** Конфиг с `include`, развёрнутым из фабрики, — в том виде, в каком его ждёт Prisma */
+type ResolvedSelection<C> = {
+  [K in keyof C]: K extends 'include'
+    ? C[K] extends () => infer I
+      ? I
+      : C[K]
+    : C[K];
+};
 
 export type UpdateDataInput<M extends WritableModelNames> =
   UpdateArgs<M> extends { data: infer D } ? D : never;
@@ -84,7 +103,7 @@ export type UpdateDataInput<M extends WritableModelNames> =
  */
 type SelectionConfig<M extends ReadableModelNames> =
   | { select?: SelectInput<M>; include?: never }
-  | { select?: never; include?: IncludeInput<M> };
+  | { select?: never; include?: IncludeConfig<M> };
 
 /**
  * Конфигурация репозитория на чтение.
@@ -118,7 +137,10 @@ export type WriteRepositoryConfig<M extends WritableModelNames> =
 export type BaseFindArgs<
   M extends ReadableModelNames,
   C extends ReadRepositoryConfig<M>,
-> = Pick<C, Extract<keyof C, 'where' | 'select' | 'include'>>;
+> = Pick<
+  ResolvedSelection<C>,
+  Extract<keyof C, 'where' | 'select' | 'include'>
+>;
 
 export type BaseFindManyArgs<
   M extends ReadableModelNames,
@@ -160,7 +182,7 @@ export type SoftDeleteParams<C> = 'softDeleteData' extends keyof C
 export type BaseWriteArgs<
   M extends ReadableModelNames,
   C extends ReadRepositoryConfig<M>,
-> = Pick<C, Extract<keyof C, 'select' | 'include'>>;
+> = Pick<ResolvedSelection<C>, Extract<keyof C, 'select' | 'include'>>;
 
 // #endregion Config building blocks
 
@@ -190,12 +212,30 @@ export interface IModelMapper<
 
 export interface IWriteModelMapper<
   M extends WritableModelNames,
-  C extends ReadRepositoryConfig<M>,
+  C extends WriteRepositoryConfig<M>,
   E,
 > extends IModelMapper<M, C, E> {
   entityToCreateModel(model: Partial<E>): CreateData<M>;
   entityToUpdateModel(model: Partial<E>): UpdateDataInput<M>;
 }
+
+/**
+ * Делегат без привязки к модели — для операций базовых классов. Тип делегата
+ * обобщённой модели `M` TS не разрешает, а при единственной модели в схеме,
+ * наоборот, разрешает — поэтому базовые классы ходят в делегат через этот тип,
+ * а форму результата задаёт маппер.
+ */
+export type UntypedDelegate = Record<
+  | 'count'
+  | 'create'
+  | 'createManyAndReturn'
+  | 'delete'
+  | 'findFirst'
+  | 'findFirstOrThrow'
+  | 'findMany'
+  | 'update',
+  (args: unknown) => Promise<any>
+>;
 
 export type RepositoryResult<M> = Promise<
   NeverThrowResult<M, InfrastructureError>

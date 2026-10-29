@@ -1,10 +1,13 @@
-import type { Params } from 'nestjs-pino';
+import type { Params } from '@cct-rip/nestjs-pino-logger';
+import { AppConfigService } from '@lib/config';
 import { randomUUID } from 'node:crypto';
 
 /** Уровень по умолчанию вне production, если `LOG_LEVEL` не задан */
 const DEFAULT_DEV_LOG_LEVEL = 'debug';
 /** Уровень по умолчанию в production, если `LOG_LEVEL` не задан */
 const DEFAULT_PROD_LOG_LEVEL = 'info';
+/** В тестах шум не нужен: только WARN и выше, http-лог запросов выключен */
+const DEFAULT_TEST_LOG_LEVEL = 'warn';
 
 /**
  * Пути, значения которых вырезаются из лога: заголовки с секретами
@@ -20,16 +23,20 @@ const REDACT_PATHS = [
 const SILENT_PATH_PREFIXES = ['/health', '/swagger'];
 
 /**
- * Параметры `nestjs-pino`, собранные из окружения.
+ * Параметры логгера, собранные из конфига.
  *
  * Вынесены из модуля, чтобы тестовая обвязка (`createTestApp`) поднимала
  * логгер ровно с теми же настройками, что и прод.
  */
-export function buildLoggerParams(): Params {
-  const isProduction = process.env.NODE_ENV === 'production';
+export function buildLoggerParams(config: AppConfigService): Params {
+  const { isProduction, isTest } = config;
   const level =
-    process.env.LOG_LEVEL ??
-    (isProduction ? DEFAULT_PROD_LOG_LEVEL : DEFAULT_DEV_LOG_LEVEL);
+    config.logLevel
+    ?? (isTest
+      ? DEFAULT_TEST_LOG_LEVEL
+      : isProduction
+        ? DEFAULT_PROD_LOG_LEVEL
+        : DEFAULT_DEV_LOG_LEVEL);
 
   return {
     pinoHttp: {
@@ -54,13 +61,16 @@ export function buildLoggerParams(): Params {
         return 'info';
       },
       redact: { paths: REDACT_PATHS, remove: true },
-      // healthcheck и Swagger не засоряют лог
-      autoLogging: {
-        ignore: (req) =>
-          SILENT_PATH_PREFIXES.some((prefix) =>
-            (req.url ?? '').startsWith(prefix),
-          ),
-      },
+      // healthcheck и Swagger не засоряют лог; в тестах строка
+      // "request completed" на каждый запрос — только шум
+      autoLogging: isTest
+        ? false
+        : {
+            ignore: (req) =>
+              SILENT_PATH_PREFIXES.some((prefix) =>
+                (req.url ?? '').startsWith(prefix),
+              ),
+          },
       // id запроса: из X-Request-Id или сгенерированный; уезжает и в ответ,
       // и во все логи внутри запроса
       genReqId: (req, res) => {

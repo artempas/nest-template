@@ -7,7 +7,7 @@ import {
 import { DomainError, UnhandledDomainError } from './domain';
 import type { Response } from 'express';
 import { HttpReturnableError } from './http.error';
-import { Logger } from 'nestjs-pino';
+import { Logger } from '@cct-rip/nestjs-pino-logger';
 
 /**
  * Глобальный фильтр для ошибок проекта (см. docs/Обработка ошибок.md >

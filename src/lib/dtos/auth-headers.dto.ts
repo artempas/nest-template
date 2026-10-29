@@ -1,5 +1,5 @@
 import { Expose, Transform } from 'class-transformer';
-import { IsNaturalNumber } from '@lib/decorators/property/validation';
+import { IsNaturalNumber } from '@lib/decorators/property';
 
 /**
  * Соответствие «поле {@link AuthHeadersDto} → имя HTTP-заголовка».

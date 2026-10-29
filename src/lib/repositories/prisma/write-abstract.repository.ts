@@ -3,6 +3,7 @@ import { PrismaReadRepository } from './read-abstract.repository';
 import type {
   BaseWriteArgs,
   CreateArgs,
+  CreateManyAndReturnArgs,
   DelegateName,
   DeleteArgs,
   HardDeleteParams,
@@ -42,9 +43,24 @@ export abstract class PrismaWriteRepository<
     const args = this.mergeCreateArgs({
       data: this.mapper.entityToCreateModel(data),
     });
-    // @ts-expect-error TS unable to resolve delegate signature
-    const model = await this.getDelegate(ctx).create(args);
+    const model = await this.getUntypedDelegate(ctx).create(args);
     return ok(this.mapper.modelToEntity(model));
+  }
+
+  @PrismaErrorsHandler()
+  async createMany(
+    data: Partial<Entity>[],
+    ctx: TransactionClient = this.prisma,
+  ): RepositoryResult<Entity[]> {
+    if (data.length === 0) {
+      return ok([]);
+    }
+    // @ts-expect-error TS unable to resolve delegate signature
+    const args = this.mergeCreateManyArgs({
+      data: data.map((item) => this.mapper.entityToCreateModel(item)),
+    });
+    const models = await this.getUntypedDelegate(ctx).createManyAndReturn(args);
+    return ok(models.map((model) => this.mapper.modelToEntity(model)));
   }
 
   @PrismaErrorsHandler()
@@ -59,8 +75,7 @@ export abstract class PrismaWriteRepository<
       where: { id },
       data: this.mapper.entityToUpdateModel(data),
     });
-    // @ts-expect-error TS unable to resolve delegate signature
-    const model = await this.getDelegate(ctx).update(args);
+    const model = await this.getUntypedDelegate(ctx).update(args);
     return ok(this.mapper.modelToEntity(model));
   }
 
@@ -78,8 +93,7 @@ export abstract class PrismaWriteRepository<
     }
     // @ts-expect-error TS unable to resolve delegate signature
     const args = this.mergeDeleteArgs({ where: { id } });
-    // @ts-expect-error TS unable to resolve delegate signature
-    const model = await this.getDelegate(ctx).delete(args);
+    const model = await this.getUntypedDelegate(ctx).delete(args);
     return ok(this.mapper.modelToEntity(model));
   }
 
@@ -101,8 +115,7 @@ export abstract class PrismaWriteRepository<
     }
     // @ts-expect-error TS unable to resolve delegate signature
     const args = this.mergeSoftDeleteArgs(initiatorId, { where: { id } });
-    // @ts-expect-error TS unable to resolve delegate signature
-    const model = await this.getDelegate(ctx).update(args);
+    const model = await this.getUntypedDelegate(ctx).update(args);
     return ok(this.mapper.modelToEntity(model));
   }
 
@@ -111,7 +124,8 @@ export abstract class PrismaWriteRepository<
    * форма результата берётся из конфига.
    */
   protected buildBaseWriteArgs(): BaseWriteArgs<M, A> {
-    const { select, include } = this.args;
+    const { select } = this.args;
+    const include = this.resolveInclude();
 
     return {
       ...(select ? { select } : {}),
@@ -120,6 +134,12 @@ export abstract class PrismaWriteRepository<
   }
 
   protected mergeCreateArgs<T extends CreateArgs<M>>(
+    args: T,
+  ): BaseWriteArgs<M, A> & T {
+    return merge({}, this.buildBaseWriteArgs(), args);
+  }
+
+  protected mergeCreateManyArgs<T extends CreateManyAndReturnArgs<M>>(
     args: T,
   ): BaseWriteArgs<M, A> & T {
     return merge({}, this.buildBaseWriteArgs(), args);
@@ -169,6 +189,7 @@ export abstract class PrismaWriteRepository<
 }
 
 // #region Types test -----------------------------------------------------------
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 type UserEntity = {
   id: number;

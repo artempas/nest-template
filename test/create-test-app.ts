@@ -13,7 +13,7 @@ export async function createTestApp(
   metadata: ModuleMetadata,
 ): Promise<INestApplication> {
   // LoggerModule (@Global) обязан совпадать с прод-обвязкой: configureApp
-  // вызывает app.get(Logger). Уровень в тестах глушится через LOG_LEVEL
+  // вызывает app.get(Logger). В тестах логгер работает в профиле NODE_ENV=test
   // (см. test/setup-env.ts).
   const builder = Test.createTestingModule({
     imports: [LoggerModule, ...(metadata.imports ?? [])],

@@ -4,7 +4,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { DomainExceptionFilter } from '@lib/errors';
-import { Logger } from 'nestjs-pino';
+import { Logger } from '@cct-rip/nestjs-pino-logger';
 import { Reflector } from '@nestjs/core';
 
 /**

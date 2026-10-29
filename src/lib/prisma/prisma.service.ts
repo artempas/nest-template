@@ -1,7 +1,8 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { AppConfigService } from '@lib/config';
+import { parseConnectionString } from './connection';
 import { PrismaClient } from '@generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { readConnectionFromEnv } from './connection';
 
 /**
  * `PrismaClient`, живущий в DI-контейнере.
@@ -19,14 +20,37 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleDestroy, OnModuleInit
 {
-  constructor() {
-    const { connectionString, schema } = readConnectionFromEnv();
+  /**
+   * Схема, на которую настроен клиент (из `?schema=` в `DATABASE_URL`, см.
+   * {@link parseConnectionString}) — используется репозиториями, которым
+   * нужен `$queryRaw`: адаптер квалифицирует схемой SQL только для типовых
+   * запросов через делегаты, сырые запросы идут как написаны и в обход этого
+   * не попадают в нужную схему (актуально прежде всего в тестах, где у
+   * каждого воркера Jest своя схема).
+   */
+  readonly schema: string | undefined;
 
-    super({ adapter: new PrismaPg(connectionString, { schema }) });
+  constructor(config: AppConfigService) {
+    const { connectionString, schema } = parseConnectionString(
+      config.databaseUrl,
+    );
+
+    super({
+      adapter: new PrismaPg(
+        {
+          connectionString,
+          connectionTimeoutMillis: config.databaseConnectTimeoutMs,
+        },
+        { schema },
+      ),
+    });
+
+    this.schema = schema;
   }
 
   async onModuleInit(): Promise<void> {
     await this.$connect();
+    await this.$queryRaw`SELECT 1`; // проверка соединения с БД
   }
 
   async onModuleDestroy(): Promise<void> {
