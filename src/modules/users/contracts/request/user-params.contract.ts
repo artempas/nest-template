@@ -1,4 +1,4 @@
-import { IsNaturalNumber } from '@lib/decorators/property/validation';
+import { IsNaturalNumber } from '@lib/decorators/property';
 import { Transform } from 'class-transformer';
 
 /** Path-параметры маршрутов вида `users/:userId`. */

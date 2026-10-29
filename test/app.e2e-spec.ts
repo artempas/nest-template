@@ -8,11 +8,11 @@ import {
 import { buildSwaggerDocument } from '@lib/bootstrap';
 import { authHeaders } from './helpers';
 import { AuthHeaders } from '@lib/decorators/param/auth-headers.decorator';
-import { AuthHeadersDto } from '@lib/dtos';
+import { AUTH_HEADERS, AuthHeadersDto } from '@lib/dtos';
 import { createTestApp } from './create-test-app';
 import { EndpointBuilder } from '@lib/endpoint-builder';
 import { Expose } from 'class-transformer';
-import { IsValidString } from '@lib/decorators/property/validation';
+import { IsValidString } from '@lib/decorators/property';
 import { MaxStringLength } from '@lib/constants/validation';
 import request from 'supertest';
 
@@ -121,5 +121,17 @@ describe('Глобальная обвязка приложения', () => {
     const document = buildSwaggerDocument(app);
 
     expect(document.paths).toHaveProperty(echoPath);
+  });
+
+  it('документирует заголовки пользователя у операций с @AuthHeaders()', () => {
+    const document = buildSwaggerDocument(app);
+
+    expect(document.paths[echoPath].post?.parameters).toContainEqual(
+      expect.objectContaining({
+        in: 'header',
+        name: AUTH_HEADERS.userId,
+        required: true,
+      }),
+    );
   });
 });

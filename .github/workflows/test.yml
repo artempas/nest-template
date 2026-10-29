@@ -1,0 +1,61 @@
+name: Test
+
+on:
+  push:
+    branches: [master]
+    paths: &paths
+      - "src/**"
+      - "test/**"
+      - "prisma/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "tsconfig*.json"
+      - "nest-cli.json"
+      - "eslint.config.mjs"
+      - ".github/workflows/test.yml"
+  pull_request:
+    paths: *paths
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: database_name
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U user -d database_name"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://user:password@localhost:5432/database_name
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm exec prisma generate
+
+      - name: Run e2e tests
+        # На раннере GitHub Actions 4 vCPU, а jest-e2e.json задаёт maxWorkers: 5
+        # для дева — под конкуренцией за CPU beforeAll не укладывается в таймаут
+        # хука. Локальную настройку не трогаем, режем воркеров только для CI.
+        run: pnpm test:e2e --runInBand

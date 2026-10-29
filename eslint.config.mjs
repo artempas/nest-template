@@ -1,6 +1,6 @@
 // @ts-check
 import eslint from '@eslint/js';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import globals from 'globals';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
@@ -13,11 +13,14 @@ export default defineConfig(
       'coverage/**',
       'prisma/**',
       'src/generated/**',
+      'prisma.config.ts',
     ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
-  eslintPluginPrettierRecommended,
+  // Форматированием занимается Prettier (.prettierrc), проверка — отдельным
+  // шагом `pnpm format:check`. Здесь только гасим конфликтующие с ним правила.
+  eslintConfigPrettier,
   {
     languageOptions: {
       globals: {
@@ -43,7 +46,18 @@ export default defineConfig(
       '@typescript-eslint/no-unused-expressions': 'off',
       '@typescript-eslint/no-redundant-type-constituents': 'off',
       '@typescript-eslint/no-require-imports': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          args: 'all',
+          argsIgnorePattern: '^_',
+          caughtErrors: 'all',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
       '@typescript-eslint/no-non-null-asserted-optional-chain': 'warn',
       '@typescript-eslint/no-misused-promises': [
         'error',

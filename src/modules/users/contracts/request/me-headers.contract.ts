@@ -1,9 +1,6 @@
 import { Expose, Transform } from 'class-transformer';
 import { IsEmail, IsOptional } from 'class-validator';
-import {
-  IsNaturalNumber,
-  IsValidString,
-} from '@lib/decorators/property/validation';
+import { IsNaturalNumber, IsValidString } from '@lib/decorators/property';
 import { AUTH_HEADERS } from '@lib/dtos';
 import { MaxStringLength } from '@lib/constants/validation';
 

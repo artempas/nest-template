@@ -5,6 +5,7 @@
 <p align="center">
   <a href="https://github.com/artempas/nest-template/actions/workflows/build.yml"><img src="https://github.com/artempas/nest-template/actions/workflows/build.yml/badge.svg" alt="Build"></a>
   <a href="https://github.com/artempas/nest-template/actions/workflows/lint.yml"><img src="https://github.com/artempas/nest-template/actions/workflows/lint.yml/badge.svg" alt="Lint"></a>
+  <a href="https://github.com/artempas/nest-template/actions/workflows/test.yml"><img src="https://github.com/artempas/nest-template/actions/workflows/test.yml/badge.svg" alt="Test"></a>
 </p>
 
 <p align="center">Шаблон NestJS-проекта со строгими архитектурными соглашениями (слоистая архитектура, Prisma, типобезопасные контракты) и готовой инфраструктурой для разработки: линтер, тесты, git-хуки, CI.</p>
@@ -18,7 +19,7 @@
 - [NestJS](https://nestjs.com/) 11 + TypeScript
 - [Prisma ORM](https://www.prisma.io/) 7 (PostgreSQL)
 - [neverthrow](https://github.com/supermacro/neverthrow) — обработка ошибок в стиле Result
-- [nestjs-pino](https://github.com/iamolegga/nestjs-pino) — структурированное логирование (см. [docs/Логирование.md](docs/Логирование.md))
+- [@cct-rip/nestjs-pino-logger](https://github.com/CCT-RIP/nestjs-pino-logger) — структурированное логирование (см. [docs/Логирование.md](docs/Логирование.md))
 - class-validator / class-transformer — валидация и сериализация DTO
 - Jest + Supertest — e2e-тестирование через реальное HTTP
 - ESLint + Prettier + Husky/lint-staged — статический анализ и pre-commit хуки
@@ -28,7 +29,7 @@
 
 - Node.js 22+
 - pnpm (см. поле `packageManager` в [package.json](package.json), сейчас `10.29.3`)
-- Docker (для локального поднятия PostgreSQL скриптом `db-up.sh`; при наличии своей БД — не обязателен)
+- Docker (для локального поднятия PostgreSQL скриптом `db-up.sh` / `db-up.ps1`; при наличии своей БД — не обязателен)
 
 ## Установка и запуск
 
@@ -38,7 +39,7 @@
    pnpm install
    ```
 
-2. Создать `.env` на основе примера и при необходимости поправить `DATABASE_URL`:
+2. Создать `.env` на основе примера и при необходимости поправить `DATABASE_URL` (полный список переменных — в [docs/Конфигурация.md](docs/Конфигурация.md); на некорректном окружении приложение падает на старте со списком проблем):
 
    ```bash
    cp example.env .env
@@ -49,6 +50,8 @@
    ```bash
    ./scripts/db-up.sh
    ```
+
+   На Windows — `.\scripts\db-up.ps1`.
 
 4. Сгенерировать Prisma Client и применить миграции:
 
@@ -91,6 +94,8 @@ pnpm test:e2e
 pnpm test:e2e:cov
 ```
 
+В CI e2e гоняются workflow [test.yml](.github/workflows/test.yml) с PostgreSQL в service-контейнере.
+
 ## Линт и форматирование
 
 ```bash
@@ -102,7 +107,12 @@ pnpm lint:check
 
 # форматирование Prettier
 pnpm format
+
+# только проверить форматирование (используется в CI)
+pnpm format:check
 ```
+
+ESLint форматирование не проверяет — этим занимается Prettier отдельным шагом (`eslint-config-prettier` только гасит конфликтующие правила).
 
 Husky + lint-staged прогоняют ESLint и Prettier на staged-файлах перед каждым коммитом.
 
@@ -116,6 +126,9 @@ pnpm exec prisma generate
 
 # создать и применить новую миграцию
 pnpm exec prisma migrate dev
+
+# заполнить БД данными для разработки (prisma/seed.ts)
+pnpm exec prisma db seed
 ```
 
 ## Структура проекта
@@ -135,10 +148,11 @@ docs/                  # архитектурные соглашения про�
 
 ## CI
 
-На каждый push/PR в GitHub Actions запускаются два воркфлоу ([.github/workflows](.github/workflows)):
+На каждый push/PR в GitHub Actions запускаются воркфлоу ([.github/workflows](.github/workflows)):
 
 - **Build** — установка зависимостей, генерация Prisma Client, `pnpm build`.
-- **Lint** — установка зависимостей, генерация Prisma Client, `pnpm lint:check`.
+- **Lint** — установка зависимостей, генерация Prisma Client, `pnpm lint:check` и `pnpm format:check`.
+- **Test** — то же плюс PostgreSQL в service-контейнере и `pnpm test:e2e`.
 
 ## Документация
 

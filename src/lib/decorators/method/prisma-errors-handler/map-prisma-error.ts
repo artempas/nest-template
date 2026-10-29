@@ -12,12 +12,12 @@ export function mapPrismaError(
   error: PrismaClientKnownRequestError,
 ): InfrastructureError {
   return (
-    ValueTooLongError.fromPrismaError(error) ??
-    UniqueConstraintViolationError.fromPrismaError(error) ??
-    ForeignKeyConstraintError.fromPrismaError(error) ??
-    NotNullConstraintError.fromPrismaError(error) ??
-    RelatedRecordNotFoundError.fromPrismaError(error) ??
-    RecordNotFoundError.fromPrismaError(error) ??
-    new UnexpectedDatabaseError(error.message, error)
+    ValueTooLongError.fromPrismaError(error)
+    ?? UniqueConstraintViolationError.fromPrismaError(error)
+    ?? ForeignKeyConstraintError.fromPrismaError(error)
+    ?? NotNullConstraintError.fromPrismaError(error)
+    ?? RelatedRecordNotFoundError.fromPrismaError(error)
+    ?? RecordNotFoundError.fromPrismaError(error)
+    ?? new UnexpectedDatabaseError(error.message, error)
   );
 }

@@ -77,11 +77,15 @@ Query-параметры и path-параметры также валидиру�
 ### Даты
 
 Во всем проекте для дат используется ТОЛЬКО формат ISO8601, соответственно и декоратор должен быть `@IsISO8601({strict: true})`
-Для DateOnly используется отдельный ValueObject и идущий с ним в комплекте `@IsDateOnly()`
+Для DateOnly используется отдельный ValueObject `DateOnly` (`@lib/value-objects`) и идущий с ним в комплекте `@IsDateOnly()` (`@lib/decorators/property`): строка `YYYY-MM-DD` с реальным календарным днём. Границы задаются тем же ValueObject — `@IsDateOnly({ gte: DateOnly.fromString('2026-01-01') })` (`lt`/`lte`/`gt`/`gte`/`eq`)
 
  > 
  > \[!warning\] DTO никогда не преобразует строки в ValueObjects
  > Преобразования должны происходить на уровне бизнес-логики
+
+### Большие целые (`BIGINT`)
+
+Значения, не влезающие в `Number.MAX_SAFE_INTEGER` (денежные суммы в минимальных единицах и т.п.), принимаются строкой: `@IsBigintString()` — неотрицательное целое из 1–19 цифр, влезающее в `BIGINT`. В `bigint` строку конвертирует сервис, как и в случае с `DateOnly`
 
 ### Enum, boolean
 

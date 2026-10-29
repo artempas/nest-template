@@ -1,2 +1,4 @@
 import { UserDomainErrorCodes } from './users';
-export type DomainErrorCodes = UserDomainErrorCodes;
+
+// коды общих ошибок (см. docs/Ошибки.md > Общие доменные ошибки) перечисляются здесь же
+export type DomainErrorCodes = 'ACCESS_DENIED' | UserDomainErrorCodes;

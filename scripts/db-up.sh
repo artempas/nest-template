@@ -102,18 +102,22 @@ PG_VOLUME="${PG_VOLUME:-${CONTAINER_NAME}-data}"
 
 # --- Проверка занятости порта --------------------------------------------------------
 
-# Возвращает 0, если на порту кто-то слушает. Пробуем несколько способов:
-# ss/lsof видят локальные сокеты, tcp-connect ловит всё остальное (в т.ч. проброс из WSL/VM).
+# Возвращает 0, если на порту кто-то слушает. Приоритет — ss/lsof;
+# tcp-connect с таймаутом остаётся как запасной вариант, если их нет.
 port_in_use() {
   local port="$1"
 
   if command -v ss >/dev/null 2>&1; then
     [[ -n "$(ss -ltnH "sport = :${port}" 2>/dev/null)" ]] && return 0
+    return 1
   elif command -v lsof >/dev/null 2>&1; then
     lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1 && return 0
+    return 1
   fi
 
-  (exec 3<>"/dev/tcp/127.0.0.1/${port}") >/dev/null 2>&1 && return 0
+  # Запасной способ без ss/lsof: tcp-connect с таймаутом (без него на некоторых
+  # WSL2-конфигурациях обращение к закрытому порту висит).
+  timeout 1 bash -c "exec 3<>/dev/tcp/127.0.0.1/${port}" >/dev/null 2>&1 && return 0
 
   return 1
 }
