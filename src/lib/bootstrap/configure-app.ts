@@ -49,6 +49,8 @@ export function configureApp(app: INestApplication): INestApplication {
   // (см. docs/Обработка ошибок.md > Глобальный ExceptionFilter). Фильтр вне DI,
   // поэтому pino-логгер отдаётся ему конструктором — как Reflector выше.
   app.useGlobalFilters(new DomainExceptionFilter(app.get(Logger)));
-
+  
+  app.enableCors({ origin: '*' });
+  
   return app;
 }
